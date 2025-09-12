@@ -1,0 +1,12 @@
+# Example global configuration file for wt (worktree CLI)
+# 
+# This file should be placed at:
+#   - $XDG_CONFIG_HOME/wt/config.toml (if XDG_CONFIG_HOME is set)
+#   - ~/.config/wt/config.toml (default)
+#
+# All configuration is optional. If not specified, defaults will be used.
+
+# Location where worktrees will be created
+# Default: ~/projects/worktrees
+# Environment variable WORKTREE_BASE_DIR overrides this setting
+worktrees_location = "~/projects/worktrees"
