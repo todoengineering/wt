@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dboroujerdi/wt/internal/editor"
-	"github.com/dboroujerdi/wt/internal/git"
-	"github.com/dboroujerdi/wt/internal/tmux"
+	"github.com/todoengineering/wt/internal/editor"
+	"github.com/todoengineering/wt/internal/git"
+	"github.com/todoengineering/wt/internal/tmux"
 	"github.com/spf13/cobra"
 )
 

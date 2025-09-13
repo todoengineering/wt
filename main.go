@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/dboroujerdi/wt/cmd/worktree"
+	"github.com/todoengineering/wt/cmd/worktree"
 )
 
 func main() {

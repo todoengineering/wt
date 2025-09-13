@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dboroujerdi/wt/internal/config"
+	"github.com/todoengineering/wt/internal/config"
 )
 
 func IsGitRepository() bool {

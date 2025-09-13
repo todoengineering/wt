@@ -1,4 +1,4 @@
-module github.com/dboroujerdi/wt
+module github.com/todoengineering/wt
 
 go 1.24.2
 
