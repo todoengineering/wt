@@ -81,6 +81,56 @@ func SanitizeBranchName(branchName string) string {
 	return replacer.Replace(branchName)
 }
 
+type Project struct {
+	Name      string
+	Path      string
+	Worktrees []Worktree
+}
+
+func ListAllProjects() ([]Project, error) {
+	baseDir := GetWorktreeBaseDir()
+	
+	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
+		return []Project{}, nil
+	}
+	
+	entries, err := os.ReadDir(baseDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read worktree base directory: %w", err)
+	}
+	
+	var projects []Project
+	for _, entry := range entries {
+		if entry.IsDir() {
+			projectName := entry.Name()
+			projectPath := filepath.Join(baseDir, projectName)
+			
+			// List worktrees for this project
+			worktrees, err := ListWorktrees(projectName)
+			if err != nil {
+				// Skip projects we can't read worktrees for
+				continue
+			}
+			
+			// Only include projects that have at least one worktree
+			if len(worktrees) > 0 {
+				projects = append(projects, Project{
+					Name:      projectName,
+					Path:      projectPath,
+					Worktrees: worktrees,
+				})
+			}
+		}
+	}
+	
+	// Sort projects by name
+	sort.Slice(projects, func(i, j int) bool {
+		return strings.ToLower(projects[i].Name) < strings.ToLower(projects[j].Name)
+	})
+	
+	return projects, nil
+}
+
 func CreateWorktree(repoName, worktreeName, branchName string) (string, error) {
 	worktreeDir := GetWorktreeDir(repoName)
 	worktreePath := filepath.Join(worktreeDir, worktreeName)

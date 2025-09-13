@@ -37,26 +37,26 @@
 - [x] Create/switch tmux session
 - [x] Handle editor in tmux session context
 
-### `worktree open`
-- [ ] Check fzf availability
-- [ ] List all projects in worktree base directory
-- [ ] Interactive project selection with fzf
-- [ ] List worktrees for selected project
-- [ ] Interactive worktree selection with fzf
-- [ ] Open in configured editor
-- [ ] Create/switch tmux session
+### `worktree open` ✅
+- [x] Check fzf availability
+- [x] List all projects in worktree base directory
+- [x] Interactive project selection with fzf
+- [x] List worktrees for selected project
+- [x] Interactive worktree selection with fzf
+- [x] Open in configured editor
+- [x] Create/switch tmux session
 
-### `worktree checkout`
-- [ ] Check fzf availability
-- [ ] Fetch remote branches
-- [ ] List all branches (local and remote)
-- [ ] Filter out current branch and HEAD
-- [ ] Interactive branch selection with fzf
-- [ ] Check if worktree already exists
-- [ ] Create worktree for selected branch
-- [ ] Handle special characters in branch names
-- [ ] Open in configured editor
-- [ ] Create/switch tmux session
+### `worktree checkout` ✅
+- [x] Check fzf availability
+- [x] Fetch remote branches
+- [x] List all branches (local and remote)
+- [x] Filter out current branch and HEAD
+- [x] Interactive branch selection with fzf
+- [x] Check if worktree already exists
+- [x] Create worktree for selected branch
+- [x] Handle special characters in branch names
+- [x] Open in configured editor
+- [x] Create/switch tmux session
 
 ### `worktree delete`
 - [ ] Check fzf availability
@@ -92,7 +92,7 @@
 - [x] Validate Git repository
 - [x] Get current branch
 - [x] List local branches
-- [ ] List remote branches
+- [x] List remote branches
 - [x] Create new branches
 - [x] Run worktree commands
 
