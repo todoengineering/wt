@@ -71,21 +71,40 @@ and creates/switches to a tmux session.`,
 		
 		fmt.Printf("Worktree created at: %s\n", worktreePath)
 		
-		// Create/switch tmux session with editor
-		sessionName := tmux.SanitizeSessionName(worktreeName)
-		if tmux.IsInstalled() {
-			if err := tmux.CreateSessionWithCommand(sessionName, worktreePath, editor.GetEditorCommand(worktreePath)); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-			} else {
-				fmt.Printf("Tmux session '%s' created with editor\n", sessionName)
-			}
-		} else {
-			// No tmux, just open editor normally
-			if err := editor.OpenInEditor(worktreePath); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-			} else {
-				fmt.Printf("Opened in editor\n")
-			}
-		}
+        // Create/switch tmux session and/or open editor according to flags
+        sessionName := tmux.SanitizeSessionName(worktreeName)
+        if noTmux {
+            if !noEditor {
+                if err := editor.OpenInEditor(worktreePath); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Opened in editor\n")
+                }
+            }
+            return
+        }
+        if tmux.IsInstalled() {
+            if noEditor {
+                if err := tmux.CreateSession(sessionName, worktreePath); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Tmux session '%s' created\n", sessionName)
+                }
+            } else {
+                if err := tmux.CreateSessionWithCommand(sessionName, worktreePath, editor.GetEditorCommand(worktreePath)); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Tmux session '%s' created with editor\n", sessionName)
+                }
+            }
+        } else {
+            if !noEditor {
+                if err := editor.OpenInEditor(worktreePath); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Opened in editor\n")
+                }
+            }
+        }
 	},
 }

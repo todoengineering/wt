@@ -104,24 +104,42 @@ detects and opens existing worktrees instead of creating duplicates.`,
 
 		fmt.Printf("Worktree created at: %s\n", worktreePath)
 
-		// Create/switch tmux session with editor
-		sessionName := fmt.Sprintf("%s-%s", repoName, sanitizedName)
-		sessionName = tmux.SanitizeSessionName(sessionName)
-		
-		if tmux.IsInstalled() {
-			if err := tmux.CreateSessionWithCommand(sessionName, worktreePath, editor.GetEditorCommand(worktreePath)); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-			} else {
-				fmt.Printf("Tmux session '%s' created with editor\n", sessionName)
-			}
-		} else {
-			// No tmux, just open editor normally
-			if err := editor.OpenInEditor(worktreePath); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-			} else {
-				fmt.Printf("Opened in editor\n")
-			}
-		}
+        // Create/switch tmux session and/or open editor according to flags
+        sessionName := fmt.Sprintf("%s-%s", repoName, sanitizedName)
+        sessionName = tmux.SanitizeSessionName(sessionName)
+        if noTmux {
+            if !noEditor {
+                if err := editor.OpenInEditor(worktreePath); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Opened in editor\n")
+                }
+            }
+            return
+        }
+        if tmux.IsInstalled() {
+            if noEditor {
+                if err := tmux.CreateSession(sessionName, worktreePath); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Tmux session '%s' created\n", sessionName)
+                }
+            } else {
+                if err := tmux.CreateSessionWithCommand(sessionName, worktreePath, editor.GetEditorCommand(worktreePath)); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Tmux session '%s' created with editor\n", sessionName)
+                }
+            }
+        } else {
+            if !noEditor {
+                if err := editor.OpenInEditor(worktreePath); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+                } else {
+                    fmt.Printf("Opened in editor\n")
+                }
+            }
+        }
 	},
 }
 
@@ -216,32 +234,50 @@ func selectBranchWithFzf(branches []git.Branch) (string, error) {
 func switchToWorktree(repoName string, worktree git.Worktree) {
 	fmt.Printf("Switching to worktree: %s\n", worktree.Name)
 
-	// Create or switch to tmux session
-	sessionName := fmt.Sprintf("%s-%s", repoName, worktree.Name)
-	sessionName = tmux.SanitizeSessionName(sessionName)
+    // Create or switch to tmux session
+    sessionName := fmt.Sprintf("%s-%s", repoName, worktree.Name)
+    sessionName = tmux.SanitizeSessionName(sessionName)
 
-	if tmux.IsInstalled() {
-		if tmux.SessionExists(sessionName) {
-			// Open editor in the existing session before switching
-			if err := tmux.SendCommandToSession(sessionName, editor.GetEditorCommand(worktree.Path)); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to open editor in session: %v\n", err)
-			}
-			if err := tmux.SwitchToSession(sessionName); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to switch tmux session: %v\n", err)
-			} else {
-				fmt.Printf("Switched to tmux session: %s\n", sessionName)
-			}
-		} else {
-			if err := tmux.CreateSessionWithCommand(sessionName, worktree.Path, editor.GetEditorCommand(worktree.Path)); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to create tmux session: %v\n", err)
-			} else {
-				fmt.Printf("Created new tmux session: %s\n", sessionName)
-			}
-		}
-	} else {
-		// No tmux, just open editor
-		if err := editor.OpenInEditor(worktree.Path); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to open editor: %v\n", err)
-		}
-	}
+    if noTmux {
+        if !noEditor {
+            if err := editor.OpenInEditor(worktree.Path); err != nil {
+                fmt.Fprintf(os.Stderr, "Warning: failed to open editor: %v\n", err)
+            }
+        }
+        return
+    }
+    if tmux.IsInstalled() {
+        if tmux.SessionExists(sessionName) {
+            if !noEditor {
+                if err := tmux.SendCommandToSession(sessionName, editor.GetEditorCommand(worktree.Path)); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: failed to open editor in session: %v\n", err)
+                }
+            }
+            if err := tmux.SwitchToSession(sessionName); err != nil {
+                fmt.Fprintf(os.Stderr, "Warning: failed to switch tmux session: %v\n", err)
+            } else {
+                fmt.Printf("Switched to tmux session: %s\n", sessionName)
+            }
+        } else {
+            if noEditor {
+                if err := tmux.CreateSession(sessionName, worktree.Path); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: failed to create tmux session: %v\n", err)
+                } else {
+                    fmt.Printf("Created new tmux session: %s\n", sessionName)
+                }
+            } else {
+                if err := tmux.CreateSessionWithCommand(sessionName, worktree.Path, editor.GetEditorCommand(worktree.Path)); err != nil {
+                    fmt.Fprintf(os.Stderr, "Warning: failed to create tmux session: %v\n", err)
+                } else {
+                    fmt.Printf("Created new tmux session: %s\n", sessionName)
+                }
+            }
+        }
+    } else {
+        if !noEditor {
+            if err := editor.OpenInEditor(worktree.Path); err != nil {
+                fmt.Fprintf(os.Stderr, "Warning: failed to open editor: %v\n", err)
+            }
+        }
+    }
 }
