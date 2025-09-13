@@ -1,5 +1,12 @@
 # Worktree CLI Development Tasks
 
+## Recent Enhancements 🎉
+- Module renamed to `github.com/todoengineering/wt`
+- Fixed bug where editor didn't open in tmux session context
+- Enhanced repository name detection for worktrees
+- Implemented TOML configuration system with XDG compliance
+- Added file copying feature for untracked files (.env, certificates, etc.)
+
 ## Completed ✅
 
 - [x] Initialize Go module structure
@@ -11,16 +18,24 @@
   - [x] List worktrees from standard directory
   - [x] Sort worktrees alphabetically
 
-## Core Commands 🚧
+## Core Commands ✅
 
 ### `worktree new <name>`
-- [ ] Validate Git repository context
-- [ ] Create new Git branch
-- [ ] Create worktree directory structure
-- [ ] Run `git worktree add` command
-- [ ] Open in configured editor ($EDITOR)
-- [ ] Create/switch tmux session
-- [ ] Handle interactive mode (prompt for name)
+- [x] Validate Git repository context
+- [x] Create new Git branch
+- [x] Create worktree directory structure
+- [x] Run `git worktree add` command
+- [x] Open in configured editor ($EDITOR)
+- [x] Create/switch tmux session
+- [x] Handle interactive mode (prompt for name)
+- [x] Copy configured files to new worktree
+
+### `worktree switch [name]`
+- [x] Interactive worktree selection with fzf
+- [x] Direct selection by name
+- [x] Open in configured editor
+- [x] Create/switch tmux session
+- [x] Handle editor in tmux session context
 
 ### `worktree open`
 - [ ] Check fzf availability
@@ -31,7 +46,7 @@
 - [ ] Open in configured editor
 - [ ] Create/switch tmux session
 
-### `worktree branch`
+### `worktree checkout`
 - [ ] Check fzf availability
 - [ ] Fetch remote branches
 - [ ] List all branches (local and remote)
@@ -56,50 +71,57 @@
 ## Integration Features 🔧
 
 ### Editor Integration
-- [ ] Read $EDITOR environment variable
-- [ ] Parse editor command with flags
-- [ ] Validate editor availability
-- [ ] Handle editor launch errors
-- [ ] Support common editors (code, vim, emacs, etc.)
+- [x] Read $EDITOR environment variable
+- [x] Parse editor command with flags
+- [x] Validate editor availability
+- [x] Handle editor launch errors
+- [x] Support common editors (code, vim, emacs, etc.)
 
 ### Tmux Integration
-- [ ] Check if tmux is installed
-- [ ] Detect if running inside tmux
-- [ ] Create detached tmux sessions
-- [ ] Switch between tmux sessions
-- [ ] Attach to tmux sessions from outside
-- [ ] Handle session name conflicts
+- [x] Check if tmux is installed
+- [x] Detect if running inside tmux
+- [x] Create detached tmux sessions
+- [x] Switch between tmux sessions
+- [x] Attach to tmux sessions from outside
+- [x] Handle session name conflicts
 
 ## Utility Functions 📦
 
 ### Git Operations
-- [ ] Check Git installation
-- [ ] Validate Git repository
-- [ ] Get current branch
-- [ ] List local branches
+- [x] Check Git installation
+- [x] Validate Git repository
+- [x] Get current branch
+- [x] List local branches
 - [ ] List remote branches
-- [ ] Create new branches
-- [ ] Run worktree commands
+- [x] Create new branches
+- [x] Run worktree commands
 
 ### File System
-- [ ] Create directory structures
+- [x] Create directory structures
 - [ ] Clean up orphaned directories
-- [ ] Validate paths
-- [ ] Handle permissions errors
+- [x] Validate paths
+- [x] Handle permissions errors
 
 ### Interactive UI
-- [ ] Check fzf installation
-- [ ] Create fzf selection interfaces
-- [ ] Handle user input prompts
+- [x] Check fzf installation
+- [x] Create fzf selection interfaces
+- [x] Handle user input prompts
 - [ ] Display progress indicators
-- [ ] Show error messages
+- [x] Show error messages
 
 ## Configuration 🔧
 
-- [ ] Support WORKTREE_BASE_DIR environment variable
-- [ ] Default to ~/projects/worktrees
-- [ ] Validate configuration values
-- [ ] Handle missing configuration gracefully
+- [x] Support WORKTREE_BASE_DIR environment variable
+- [x] Default to ~/projects/worktrees
+- [x] Validate configuration values
+- [x] Handle missing configuration gracefully
+- [x] XDG-compliant config file support (TOML)
+- [x] Global config at ~/.config/wt/config.toml
+- [x] Local project config at .wt.toml
+- [x] Config merging (local overrides/extends global)
+- [x] Configurable worktrees location
+- [x] Copy files to new worktrees (copy_files config)
+- [x] Support glob patterns in copy_files
 
 ## Error Handling 🛡️
 
@@ -120,11 +142,11 @@
 
 ## Documentation 📚
 
-- [ ] Write README with installation instructions
-- [ ] Document all commands with examples
+- [x] Write README with installation instructions
+- [x] Document all commands with examples
 - [ ] Create man page
-- [ ] Add inline help text
-- [ ] Document configuration options
+- [x] Add inline help text
+- [x] Document configuration options
 
 ## Build & Release 🚀
 
@@ -140,7 +162,7 @@
 - [ ] Shell completions (bash, zsh, fish)
 - [ ] Worktree status command
 - [ ] Sync command for updating worktrees
-- [ ] Config file support (YAML/TOML)
+- [x] Config file support (TOML) - Completed
 - [ ] Parallel worktree operations
 - [ ] Cleanup command for orphaned worktrees
 - [ ] Integration hooks for IDEs

@@ -53,7 +53,7 @@ wt switch
 
 ### Create worktree from existing branch
 ```bash
-wt branch
+wt checkout
 ```
 
 ### Delete worktree

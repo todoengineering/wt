@@ -38,7 +38,7 @@ A Go-based CLI tool for managing Git worktrees with enhanced features including 
 - Shows worktrees from the standard directory structure
 - Displays in sorted order
 
-#### `worktree branch`
+#### `worktree checkout`
 - Lists all available branches (local and remote) using fzf
 - Excludes current branch and HEAD from selection
 - Fetches remote branches if not available locally
@@ -101,7 +101,7 @@ Commands:
   new <name>    Create new worktree with new branch
   open          Open existing worktree (interactive)
   list          List worktrees for current repo
-  branch        Create worktree from existing branch
+  checkout      Create worktree from existing branch
   delete        Delete a worktree (interactive)
   help          Show usage information
 ```

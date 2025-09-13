@@ -27,6 +27,6 @@ func init() {
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(switchCmd)
-	rootCmd.AddCommand(branchCmd)
+	rootCmd.AddCommand(checkoutCmd)
 	rootCmd.AddCommand(deleteCmd)
 }
