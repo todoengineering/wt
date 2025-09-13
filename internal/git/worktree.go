@@ -46,6 +46,41 @@ func ListWorktrees(repoName string) ([]Worktree, error) {
 	return worktrees, nil
 }
 
+func WorktreeExistsForBranch(repoName, branchName string) (bool, *Worktree) {
+	worktrees, err := ListWorktrees(repoName)
+	if err != nil {
+		return false, nil
+	}
+	
+	// Sanitize branch name to match how it would be used as a worktree directory
+	sanitizedBranch := SanitizeBranchName(branchName)
+	
+	for _, wt := range worktrees {
+		if wt.Name == sanitizedBranch || wt.Name == branchName {
+			return true, &wt
+		}
+	}
+	
+	return false, nil
+}
+
+func SanitizeBranchName(branchName string) string {
+	// Replace problematic characters with underscores
+	replacer := strings.NewReplacer(
+		"/", "_",
+		":", "_",
+		" ", "_",
+		"\\", "_",
+		"*", "_",
+		"?", "_",
+		"<", "_",
+		">", "_",
+		"|", "_",
+		"\"", "_",
+	)
+	return replacer.Replace(branchName)
+}
+
 func CreateWorktree(repoName, worktreeName, branchName string) (string, error) {
 	worktreeDir := GetWorktreeDir(repoName)
 	worktreePath := filepath.Join(worktreeDir, worktreeName)
