@@ -17,14 +17,36 @@ func IsGitRepository() bool {
 }
 
 func GetRepositoryName() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	// First check if we're in a worktree by getting the common git dir
+	cmd := exec.Command("git", "rev-parse", "--git-common-dir")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("not in a git repository")
 	}
 	
-	repoPath := strings.TrimSpace(string(output))
-	return filepath.Base(repoPath), nil
+	gitCommonDir := strings.TrimSpace(string(output))
+	
+	// Convert to absolute path if relative
+	if !filepath.IsAbs(gitCommonDir) {
+		// Get the current working directory to resolve relative path
+		cmd = exec.Command("git", "rev-parse", "--show-toplevel")
+		topLevel, err := cmd.Output()
+		if err != nil {
+			return "", fmt.Errorf("not in a git repository")
+		}
+		topLevelPath := strings.TrimSpace(string(topLevel))
+		gitCommonDir = filepath.Join(topLevelPath, gitCommonDir)
+	}
+	
+	// If the common dir ends with .git, we're in a worktree or the main repo
+	if strings.HasSuffix(gitCommonDir, ".git") {
+		// Get the parent directory of .git to find the main repository path
+		mainRepoPath := filepath.Dir(gitCommonDir)
+		return filepath.Base(mainRepoPath), nil
+	}
+	
+	// Fallback: shouldn't normally reach here
+	return "", fmt.Errorf("unable to determine repository name")
 }
 
 func GetWorktreeBaseDir() string {
