@@ -1,10 +1,21 @@
 # Example local project configuration file for wt (worktree CLI)
 # 
 # This file should be placed in the root of your Git repository as .wt.toml
-# Local configuration overrides global configuration.
+# Local configuration overrides global configuration for worktrees_location.
+# For copy_files, local config adds to (doesn't replace) global config.
 #
 # All configuration is optional.
 
 # Override the global worktrees location for this specific project
 # Useful if you want to store worktrees for this project in a different location
 worktrees_location = "~/projects/special-project-worktrees"
+
+# Project-specific files to copy to new worktrees
+# These are added to any files specified in global config
+# Useful for project-specific secrets, configs, or development files
+copy_files = [
+    ".env.development",
+    "docker/local.env",
+    "certs/*.crt",
+    "test-data/*"
+]

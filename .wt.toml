@@ -1,0 +1,5 @@
+# Local wt configuration for this project
+copy_files = [
+    ".env",
+    "wt"  # Also copy the built binary
+]

@@ -10,3 +10,15 @@
 # Default: ~/projects/worktrees
 # Environment variable WORKTREE_BASE_DIR overrides this setting
 worktrees_location = "~/projects/worktrees"
+
+# Files to copy from main repository to new worktrees
+# These files are not tracked by git but may be needed in worktrees
+# Supports glob patterns
+# Local project config adds to this list (doesn't replace it)
+copy_files = [
+    ".env",
+    ".env.local",
+    "*.pem",
+    "*.key",
+    "config/secrets/*"
+]

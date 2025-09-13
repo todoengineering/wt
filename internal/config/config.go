@@ -9,11 +9,13 @@ import (
 )
 
 type Config struct {
-	WorktreesLocation string `toml:"worktrees_location"`
+	WorktreesLocation string   `toml:"worktrees_location"`
+	CopyFiles         []string `toml:"copy_files"`
 }
 
 var defaultConfig = Config{
 	WorktreesLocation: filepath.Join(os.Getenv("HOME"), "projects", "worktrees"),
+	CopyFiles:         []string{},
 }
 
 var currentConfig *Config
@@ -25,20 +27,52 @@ func Load() (*Config, error) {
 
 	config := defaultConfig
 
+	// Load global config
+	var globalConfig Config
 	globalConfigPath := getGlobalConfigPath()
-	if err := loadConfigFile(globalConfigPath, &config); err != nil && !os.IsNotExist(err) {
+	if err := loadConfigFile(globalConfigPath, &globalConfig); err == nil {
+		// Merge global config
+		if globalConfig.WorktreesLocation != "" {
+			config.WorktreesLocation = globalConfig.WorktreesLocation
+		}
+		config.CopyFiles = append(config.CopyFiles, globalConfig.CopyFiles...)
+	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("error loading global config: %w", err)
 	}
 
+	// Load local config  
+	var localConfig Config
 	localConfigPath := getLocalConfigPath()
-	if err := loadConfigFile(localConfigPath, &config); err != nil && !os.IsNotExist(err) {
+	if err := loadConfigFile(localConfigPath, &localConfig); err == nil {
+		// Local config overrides
+		if localConfig.WorktreesLocation != "" {
+			config.WorktreesLocation = localConfig.WorktreesLocation
+		}
+		// Merge copy_files arrays (local adds to global)
+		config.CopyFiles = append(config.CopyFiles, localConfig.CopyFiles...)
+	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("error loading local config: %w", err)
 	}
+
+	// Remove duplicates from CopyFiles
+	config.CopyFiles = removeDuplicates(config.CopyFiles)
 
 	config.WorktreesLocation = expandPath(config.WorktreesLocation)
 
 	currentConfig = &config
 	return currentConfig, nil
+}
+
+func removeDuplicates(files []string) []string {
+	seen := make(map[string]bool)
+	result := []string{}
+	for _, file := range files {
+		if !seen[file] {
+			seen[file] = true
+			result = append(result, file)
+		}
+	}
+	return result
 }
 
 func loadConfigFile(path string, config *Config) error {
@@ -90,6 +124,14 @@ func GetWorktreesLocation() string {
 		return defaultConfig.WorktreesLocation
 	}
 	return config.WorktreesLocation
+}
+
+func GetCopyFiles() []string {
+	config, err := Load()
+	if err != nil {
+		return defaultConfig.CopyFiles
+	}
+	return config.CopyFiles
 }
 
 func CreateGlobalConfigDir() error {
