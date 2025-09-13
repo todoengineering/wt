@@ -54,12 +54,6 @@ and creates/switches to a tmux session.`,
 			}
 		}
 		
-		// Save current branch to restore later
-		originalBranch, err := git.GetCurrentBranch()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: could not get current branch: %v\n", err)
-		}
-		
 		// Create new branch
 		fmt.Printf("Creating branch '%s'...\n", worktreeName)
 		if err := git.CreateBranch(worktreeName); err != nil {
@@ -72,35 +66,26 @@ and creates/switches to a tmux session.`,
 		worktreePath, err := git.CreateWorktree(repoName, worktreeName, worktreeName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			// Try to clean up the branch we created
-			if originalBranch != "" {
-				_ = git.CheckoutBranch(originalBranch)
-			}
 			os.Exit(1)
-		}
-		
-		// Switch back to original branch
-		if originalBranch != "" {
-			if err := git.CheckoutBranch(originalBranch); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: could not switch back to original branch: %v\n", err)
-			}
 		}
 		
 		fmt.Printf("Worktree created at: %s\n", worktreePath)
 		
-		// Open in editor
-		if err := editor.OpenInEditor(worktreePath); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-		} else {
-			fmt.Printf("Opened in editor\n")
-		}
-		
-		// Create/switch tmux session
+		// Create/switch tmux session with editor
 		sessionName := tmux.SanitizeSessionName(worktreeName)
-		if err := tmux.CreateSession(sessionName, worktreePath); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-		} else if tmux.IsInstalled() {
-			fmt.Printf("Tmux session '%s' created/switched\n", sessionName)
+		if tmux.IsInstalled() {
+			if err := tmux.CreateSessionWithCommand(sessionName, worktreePath, editor.GetEditorCommand(worktreePath)); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+			} else {
+				fmt.Printf("Tmux session '%s' created with editor\n", sessionName)
+			}
+		} else {
+			// No tmux, just open editor normally
+			if err := editor.OpenInEditor(worktreePath); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+			} else {
+				fmt.Printf("Opened in editor\n")
+			}
 		}
 	},
 }

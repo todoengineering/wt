@@ -7,6 +7,16 @@ import (
 	"strings"
 )
 
+func GetEditorCommand(path string) string {
+	editorCmd := os.Getenv("EDITOR")
+	if editorCmd == "" {
+		editorCmd = "vi"  // Default fallback
+	}
+	
+	// Return the full command with path
+	return fmt.Sprintf("%s %s", editorCmd, path)
+}
+
 func OpenInEditor(path string) error {
 	editorCmd := os.Getenv("EDITOR")
 	if editorCmd == "" {

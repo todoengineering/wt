@@ -7,7 +7,7 @@ import (
 )
 
 func CreateBranch(branchName string) error {
-	cmd := exec.Command("git", "checkout", "-b", branchName)
+	cmd := exec.Command("git", "branch", branchName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to create branch %s: %s", branchName, string(output))

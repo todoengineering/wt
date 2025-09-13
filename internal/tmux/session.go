@@ -45,6 +45,52 @@ func CreateSession(sessionName, workingDir string) error {
 	return SwitchToSession(sessionName)
 }
 
+func CreateSessionWithCommand(sessionName, workingDir, command string) error {
+	if !IsInstalled() {
+		// Silently skip if tmux is not installed
+		return nil
+	}
+	
+	// If session already exists, just switch to it
+	if SessionExists(sessionName) {
+		return SwitchToSession(sessionName)
+	}
+	
+	// Create new session with the editor command
+	var cmd *exec.Cmd
+	if IsInsideTmux() {
+		// Create detached session and then switch
+		cmd = exec.Command("tmux", "new-session", "-d", "-s", sessionName, "-c", workingDir, command)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("failed to create tmux session: %s", string(output))
+		}
+		return SwitchToSession(sessionName)
+	} else {
+		// Create and attach to session directly with the command
+		cmd = exec.Command("tmux", "new-session", "-s", sessionName, "-c", workingDir, command)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Start()
+	}
+}
+
+func SendCommandToSession(sessionName, command string) error {
+	if !IsInstalled() {
+		return nil
+	}
+	
+	// Send command to the first pane of the session
+	cmd := exec.Command("tmux", "send-keys", "-t", sessionName+":0.0", command, "Enter")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to send command to tmux session: %s", string(output))
+	}
+	
+	return nil
+}
+
 func SwitchToSession(sessionName string) error {
 	if !IsInstalled() {
 		return nil
