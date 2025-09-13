@@ -120,6 +120,25 @@ func SwitchToSession(sessionName string) error {
 	return nil
 }
 
+func KillSession(sessionName string) error {
+	if !IsInstalled() {
+		return nil
+	}
+
+	// Check if session exists before trying to kill it
+	if !SessionExists(sessionName) {
+		return nil // Session doesn't exist, nothing to do
+	}
+
+	cmd := exec.Command("tmux", "kill-session", "-t", sessionName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to kill tmux session: %s", string(output))
+	}
+
+	return nil
+}
+
 func SanitizeSessionName(name string) string {
 	// Tmux session names can't contain certain characters
 	// Replace them with underscores

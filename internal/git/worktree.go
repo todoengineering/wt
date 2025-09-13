@@ -13,8 +13,9 @@ import (
 )
 
 type Worktree struct {
-	Name string
-	Path string
+	Name   string
+	Path   string
+	Branch string
 }
 
 func ListWorktrees(repoName string) ([]Worktree, error) {
@@ -32,9 +33,12 @@ func ListWorktrees(repoName string) ([]Worktree, error) {
 	var worktrees []Worktree
 	for _, entry := range entries {
 		if entry.IsDir() {
+			worktreePath := filepath.Join(worktreeDir, entry.Name())
+			branch := GetWorktreeBranch(worktreePath)
 			worktrees = append(worktrees, Worktree{
-				Name: entry.Name(),
-				Path: filepath.Join(worktreeDir, entry.Name()),
+				Name:   entry.Name(),
+				Path:   worktreePath,
+				Branch: branch,
 			})
 		}
 	}
@@ -250,4 +254,66 @@ func copyFile(src, dst string) error {
 	
 	_, err = io.Copy(destFile, sourceFile)
 	return err
+}
+
+func RemoveWorktree(worktreePath string) error {
+	// Use git worktree remove with --force to handle uncommitted changes
+	cmd := exec.Command("git", "worktree", "remove", "--force", worktreePath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to remove worktree: %s", string(output))
+	}
+
+	return nil
+}
+
+func IsMainWorktree(worktreePath string) (bool, error) {
+	// Get the main repository path
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err := cmd.Output()
+	if err != nil {
+		return false, fmt.Errorf("failed to get main repository path: %w", err)
+	}
+
+	mainRepoPath := strings.TrimSpace(string(output))
+
+	// Compare paths
+	absWorktreePath, err := filepath.Abs(worktreePath)
+	if err != nil {
+		return false, fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	absMainRepoPath, err := filepath.Abs(mainRepoPath)
+	if err != nil {
+		return false, fmt.Errorf("failed to get absolute main repo path: %w", err)
+	}
+
+	return absWorktreePath == absMainRepoPath, nil
+}
+
+func GetWorktreeBranch(worktreePath string) string {
+	// Change to the worktree directory and get the current branch
+	cmd := exec.Command("git", "-C", worktreePath, "branch", "--show-current")
+	output, err := cmd.Output()
+	if err != nil {
+		// Fallback: try to get branch from HEAD
+		cmd = exec.Command("git", "-C", worktreePath, "rev-parse", "--abbrev-ref", "HEAD")
+		output, err = cmd.Output()
+		if err != nil {
+			return "unknown"
+		}
+	}
+
+	branch := strings.TrimSpace(string(output))
+	if branch == "HEAD" {
+		// Detached HEAD state, try to get the commit hash
+		cmd = exec.Command("git", "-C", worktreePath, "rev-parse", "--short", "HEAD")
+		output, err = cmd.Output()
+		if err != nil {
+			return "detached"
+		}
+		return fmt.Sprintf("detached@%s", strings.TrimSpace(string(output)))
+	}
+
+	return branch
 }

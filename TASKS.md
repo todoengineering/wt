@@ -58,15 +58,15 @@
 - [x] Open in configured editor
 - [x] Create/switch tmux session
 
-### `worktree delete`
-- [ ] Check fzf availability
-- [ ] List all worktrees for current repo
-- [ ] Interactive worktree selection with fzf
-- [ ] Show confirmation prompt
-- [ ] Validate confirmation input
-- [ ] Prevent deletion of main worktree
-- [ ] Run `git worktree remove --force`
-- [ ] Clean up orphaned directories
+### `worktree delete` ✅
+- [x] Check fzf availability
+- [x] List all worktrees for current repo
+- [x] Interactive worktree selection with fzf
+- [x] Show confirmation prompt
+- [x] Validate confirmation input
+- [x] Prevent deletion of main worktree
+- [x] Run `git worktree remove --force`
+- [x] Clean up orphaned directories
 
 ## Integration Features 🔧
 
