@@ -68,6 +68,142 @@
 - [x] Run `git worktree remove --force`
 - [x] Clean up orphaned directories
 
+## CLI Simplification & UX 🧭
+
+Goal: Make the tool simpler and more intuitive by consolidating overlapping commands, introducing consistent flags, and clarifying defaults. This plan captures the intended changes with examples and acceptance criteria.
+
+### Command Consolidation
+
+- [ ] Collapse `wt switch` into `wt open`
+  - Behavior: `wt open` opens an existing worktree and switches/creates a tmux session, and opens the editor (current behavior of both `open` and `switch`).
+  - Scope default: If inside a Git repo, list that repo’s worktrees; if outside, list across projects.
+  - [ ] Keep `wt switch` as an alias temporarily with a deprecation notice printed once per run.
+  - Acceptance:
+    - Running `wt open` in a repo shows only that repo’s worktrees.
+    - Running `wt open --all` shows a project → worktree picker across all projects.
+    - Running `wt switch` behaves identically to `wt open` and prints a deprecation notice.
+
+- [ ] Rename `wt checkout` to `wt branch` OR merge into `wt new --from`
+  - Option A (recommended): Merge into `wt new` with a `--from <branch>` flag to attach a new worktree to an existing branch.
+    - Example: `wt new feature-login --from origin/feature-login`
+    - Benefit: Fewer top-level commands; a single verb to “add a worktree”.
+  - Option B: Keep a distinct `wt branch [branch]` command (rename from `checkout`) for clarity when working from existing branches.
+    - Example: `wt branch origin/release-1.2`
+  - [ ] Decide and implement Option A or B; if B, add deprecation notice for `checkout`.
+  - Acceptance:
+    - Users can create a worktree from an existing branch either via `new --from` (A) or via `branch` (B).
+    - Existing “worktree already exists” detection still offers to switch instead of duplicating.
+
+### Common Flags (consistent behavior)
+
+- [x] `--no-editor`: Skip launching the editor after create/open/switch
+  - Applies to: `open`, `new`, `checkout` (current), `switch` (alias planned)
+  - Example: `wt open --no-editor`
+
+- [x] `--no-tmux`: Skip creating/switching tmux sessions
+  - Applies to: `open`, `new`, `checkout` (current), `switch` (alias planned)
+  - Example: `wt new ticket-42 --no-tmux`
+
+- [x] `--force` on delete: Skip confirmation prompt
+  - Applies to: `delete`
+  - Example: `wt delete ticket-42 --force`
+
+- [ ] Scope flags
+- [x] `--all` for cross-project operations
+    - Applies to: `open`, `list`
+    - Examples:
+      - `wt open --all` → project → worktree picker across all projects
+      - `wt list --all` → list all projects and their worktrees
+- [ ] `--project <name>` to filter to a specific repository (when outside any repo)
+    - Applies to: `open`, `list`
+    - Status: Implemented for `open` (flag `--project`); pending for `list`.
+    - Example: `wt open --project my-repo`
+
+- [ ] Output flags for scripting on `list`
+- [x] `--json` → machine-readable output
+- [x] `--path-only` → just the filesystem paths (one per line)
+  - Examples:
+    - `wt list --json | jq '.'`
+    - `wt list --path-only | xargs -I{} du -sh {}`
+
+### Default Behavior Adjustments
+
+- [ ] `open` default scope:
+  - In a repo → list only that repo’s worktrees (skip project selection).
+  - Outside a repo → show project → worktree interactive selection.
+  - Acceptance: Behavior matches above without requiring flags.
+
+- [ ] `open <worktree-name>` shortcut when inside a repo
+  - Example: `wt open feature-x` jumps directly if it exists; otherwise shows friendly error with suggestions.
+
+- [ ] `open --all` accepts `<repo>/<worktree>` to jump directly
+  - Example: `wt open --all my-repo/feature-x`
+
+### Aliases (optional)
+
+- [ ] `ls` → `list`
+- [ ] `rm` → `delete`
+- [ ] Keep `switch` alias to `open` during deprecation window
+
+### Migration Guide (add to README)
+
+- Before → After
+  - `wt switch` → `wt open` (or `wt open --all` outside a repo)
+  - `wt checkout` → `wt new --from <branch>` (Option A) or `wt branch` (Option B)
+  - `wt list` → unchanged; add `--all`, `--json`, `--path-only`
+  - `wt delete` → unchanged; add `--force`
+
+Examples:
+
+```bash
+# Open an existing worktree in current repo
+wt open
+wt open payment-refactor
+
+# Open across projects
+wt open --all
+wt open --all my-repo/payment-refactor
+
+# Create worktree on a new branch
+wt new feature/signup-flow
+
+# Create worktree from an existing branch (Option A)
+wt new release-1.2 --from origin/release-1.2
+
+# OR if Option B is chosen
+wt branch origin/release-1.2
+
+# List worktrees
+wt list
+wt list --all
+wt list --json
+wt list --path-only
+
+# Delete worktree
+wt delete feature/signup-flow
+wt delete feature/signup-flow --force
+
+# Suppress integrations when desired
+wt open --no-editor
+wt new feature/foo --no-tmux
+```
+
+### Deprecation Strategy
+
+- [ ] Print a one-line deprecation notice when `switch` or `checkout` are used, pointing to the replacement command.
+- [ ] Keep aliases for at least one minor release cycle.
+- [ ] Update `--help` for root and affected commands with new flags and examples.
+
+### Implementation Checklist
+
+- [ ] Wire `--no-editor` and `--no-tmux` through editor/tmux helpers without breaking defaults.
+- [ ] Add `--all` and `--project` plumbing to `open`/`list` selection paths.
+- [ ] Add JSON and path-only output modes to `list` with stable schema.
+- [ ] Rename `checkout` → `branch` OR add `--from` to `new` and remove `checkout`.
+- [ ] Implement aliasing + deprecation messages.
+- [ ] Update README command docs and usage examples.
+- [ ] Consider shell completions update once flags settle (bash/zsh/fish).
+
 ## Integration Features 🔧
 
 ### Editor Integration
