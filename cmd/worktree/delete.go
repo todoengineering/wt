@@ -107,13 +107,27 @@ prevents deletion of main repository worktree.`,
         }
 
 		// Check for and kill associated tmux session
-		sessionName := fmt.Sprintf("%s-%s", repoName, selectedWorktree.Name)
-		sessionName = tmux.SanitizeSessionName(sessionName)
+		// Standard session name is <repo>-<worktree>. For backward compatibility,
+		// also try just <worktree> (older versions of wt new).
+		primarySession := tmux.SanitizeSessionName(fmt.Sprintf("%s-%s", repoName, selectedWorktree.Name))
+		legacySession := tmux.SanitizeSessionName(selectedWorktree.Name)
 
-		if tmux.IsInstalled() && tmux.SessionExists(sessionName) {
-			fmt.Printf("🔄 Killing tmux session: %s\n", sessionName)
-			if err := tmux.KillSession(sessionName); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to kill tmux session: %v\n", err)
+		if tmux.IsInstalled() {
+			killed := false
+			if tmux.SessionExists(primarySession) {
+				fmt.Printf("🔄 Killing tmux session: %s\n", primarySession)
+				if err := tmux.KillSession(primarySession); err != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to kill tmux session: %v\n", err)
+				} else {
+					killed = true
+				}
+			}
+			// Try legacy session name if primary wasn't found/killed
+			if !killed && tmux.SessionExists(legacySession) {
+				fmt.Printf("🔄 Killing tmux session: %s\n", legacySession)
+				if err := tmux.KillSession(legacySession); err != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to kill tmux session: %v\n", err)
+				}
 			}
 		}
 

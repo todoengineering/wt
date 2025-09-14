@@ -151,7 +151,8 @@ In both modes, opens the worktree in the configured editor and creates/switches 
 		fmt.Printf("Worktree created at: %s\n", worktreePath)
 		
         // Create/switch tmux session and/or open editor according to flags
-        sessionName := tmux.SanitizeSessionName(worktreeName)
+        // Standardize on session name: <repo>-<worktree>
+        sessionName := tmux.SanitizeSessionName(fmt.Sprintf("%s-%s", repoName, worktreeName))
         if noTmux {
             if !noEditor {
                 if err := editor.OpenInEditor(worktreePath); err != nil {
