@@ -33,7 +33,6 @@ func init() {
     rootCmd.AddCommand(listCmd)
     rootCmd.AddCommand(newCmd)
     rootCmd.AddCommand(openCmd)
-    rootCmd.AddCommand(switchCmd)
     rootCmd.AddCommand(checkoutCmd)
     rootCmd.AddCommand(deleteCmd)
 }

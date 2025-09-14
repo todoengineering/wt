@@ -174,12 +174,8 @@ wt new <branch-name> --no-tmux
 
 Creates a new Git branch and worktree, copies configured files, opens in editor, and creates tmux session.
 
-### Open worktree (cross-project)
+### Open worktree
 ```bash
-# Interactive selection from all projects
-wt open
-
-# Limit to current project only
 wt open
 
 # Show all projects even when in a repo
@@ -189,18 +185,10 @@ wt open --all
 wt open --project <project-name>
 ```
 
-Two-step interactive selection: first choose project, then choose worktree within that project.
-
-### Switch to worktree
-```bash
-# Interactive selection within current repository
-wt switch
-
-# Switch to specific worktree by name
-wt switch <worktree-name>
-```
-
-Interactive selection of worktree within the current repository.
+Default behavior:
+- In a repository: lists only that repo’s worktrees (no project selection).
+- Outside a repository: choose project, then choose a worktree within it.
+- Use `--all` to browse across all projects even when in a repository.
 
 ### Create worktree from existing branch
 ```bash
@@ -242,8 +230,8 @@ wt list
 # Create new feature branch worktree
 wt new feature/user-auth
 
-# Switch between worktrees
-wt switch
+# Open an existing worktree
+wt open
 
 # Create worktree from existing branch
 wt checkout

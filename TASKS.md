@@ -74,14 +74,14 @@ Goal: Make the tool simpler and more intuitive by consolidating overlapping comm
 
 ### Command Consolidation
 
-- [ ] Collapse `wt switch` into `wt open`
+- [x] Collapse `wt switch` into `wt open`
   - Behavior: `wt open` opens an existing worktree and switches/creates a tmux session, and opens the editor (current behavior of both `open` and `switch`).
   - Scope default: If inside a Git repo, list that repo’s worktrees; if outside, list across projects.
-  - [ ] Keep `wt switch` as an alias temporarily with a deprecation notice printed once per run.
+  - [x] Remove `wt switch` command entirely (no deprecation alias needed).
   - Acceptance:
     - Running `wt open` in a repo shows only that repo’s worktrees.
     - Running `wt open --all` shows a project → worktree picker across all projects.
-    - Running `wt switch` behaves identically to `wt open` and prints a deprecation notice.
+    - `wt switch` command is no longer available.
 
 - [ ] Rename `wt checkout` to `wt branch` OR merge into `wt new --from`
   - Option A (recommended): Merge into `wt new` with a `--from <branch>` flag to attach a new worktree to an existing branch.
