@@ -192,14 +192,17 @@ Default behavior:
 
 ### Create worktree from existing branch
 ```bash
-# Interactive branch selection
-wt checkout
+# Create worktree for specific branch, derive name from branch
+wt new --from origin/release-1.2
 
-# Create worktree for specific branch
-wt checkout <branch-name>
+# Create worktree for specific branch with explicit name
+wt new release-1.2 --from origin/release-1.2
+
+# Interactive branch selection (uses fzf)
+wt new --from :pick
 ```
 
-Lists all branches (local and remote), creates worktree for selected branch. Handles existing worktrees gracefully.
+If a worktree already exists for the branch, wt offers to switch to it instead of creating a duplicate.
 
 ### Delete worktree
 ```bash
@@ -234,7 +237,7 @@ wt new feature/user-auth
 wt open
 
 # Create worktree from existing branch
-wt checkout
+wt new --from origin/release-1.2
 
 # Clean up when done
 wt delete feature/user-auth

@@ -83,25 +83,25 @@ Goal: Make the tool simpler and more intuitive by consolidating overlapping comm
     - Running `wt open --all` shows a project → worktree picker across all projects.
     - `wt switch` command is no longer available.
 
-- [ ] Rename `wt checkout` to `wt branch` OR merge into `wt new --from`
-  - Option A (recommended): Merge into `wt new` with a `--from <branch>` flag to attach a new worktree to an existing branch.
+- [x] Rename `wt checkout` to `wt branch` OR merge into `wt new --from`
+  - Chosen: Option A - Merge into `wt new` with a `--from <branch>` flag to attach a new worktree to an existing branch.
     - Example: `wt new feature-login --from origin/feature-login`
+    - Example: `wt new --from origin/release-1.2` (auto name from branch)
     - Benefit: Fewer top-level commands; a single verb to “add a worktree”.
-  - Option B: Keep a distinct `wt branch [branch]` command (rename from `checkout`) for clarity when working from existing branches.
-    - Example: `wt branch origin/release-1.2`
-  - [ ] Decide and implement Option A or B; if B, add deprecation notice for `checkout`.
   - Acceptance:
-    - Users can create a worktree from an existing branch either via `new --from` (A) or via `branch` (B).
+    - Users can create a worktree from an existing branch via `new --from`.
     - Existing “worktree already exists” detection still offers to switch instead of duplicating.
+  - Notes:
+    - Removed `checkout` command (no deprecation alias needed; not yet live).
 
 ### Common Flags (consistent behavior)
 
-- [x] `--no-editor`: Skip launching the editor after create/open/switch
-  - Applies to: `open`, `new`, `checkout` (current), `switch` (alias planned)
+- [x] `--no-editor`: Skip launching the editor after create/open
+  - Applies to: `open`, `new`
   - Example: `wt open --no-editor`
 
 - [x] `--no-tmux`: Skip creating/switching tmux sessions
-  - Applies to: `open`, `new`, `checkout` (current), `switch` (alias planned)
+  - Applies to: `open`, `new`
   - Example: `wt new ticket-42 --no-tmux`
 
 - [x] `--force` on delete: Skip confirmation prompt
@@ -143,13 +143,17 @@ Goal: Make the tool simpler and more intuitive by consolidating overlapping comm
 
 - [ ] `ls` → `list`
 - [ ] `rm` → `delete`
-- [ ] Keep `switch` alias to `open` during deprecation window
+  
+
+### Bugs
+
+- [ ] When i run "wt open --all --json" is doesn't output json
 
 ### Migration Guide (add to README)
 
 - Before → After
   - `wt switch` → `wt open` (or `wt open --all` outside a repo)
-  - `wt checkout` → `wt new --from <branch>` (Option A) or `wt branch` (Option B)
+  - `wt checkout` → `wt new --from <branch>`
   - `wt list` → unchanged; add `--all`, `--json`, `--path-only`
   - `wt delete` → unchanged; add `--force`
 
@@ -167,11 +171,8 @@ wt open --all my-repo/payment-refactor
 # Create worktree on a new branch
 wt new feature/signup-flow
 
-# Create worktree from an existing branch (Option A)
+# Create worktree from an existing branch
 wt new release-1.2 --from origin/release-1.2
-
-# OR if Option B is chosen
-wt branch origin/release-1.2
 
 # List worktrees
 wt list
