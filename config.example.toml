@@ -22,3 +22,14 @@ copy_files = [
     "*.key",
     "config/secrets/*"
 ]
+
+# Tmux windows configuration - creates named windows with optional commands
+# When configured, new worktrees will create tmux sessions with these windows
+# Empty command creates a plain terminal window
+# Local project config adds to this list (doesn't replace it)
+tmux_windows = [
+    { name = "editor", command = "nvim ." },
+    { name = "server", command = "npm run dev" },
+    { name = "tests", command = "npm run test:watch" },
+    { name = "terminal", command = "" }
+]
