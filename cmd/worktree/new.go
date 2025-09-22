@@ -89,19 +89,18 @@ In both modes, opens the worktree in the configured editor and creates/switches 
 				worktreeName = git.SanitizeBranchName(sourceBranch)
 			}
 
-			// If a worktree already exists for this branch, offer to switch instead
-			if exists, existing := git.WorktreeExistsForBranch(repoName, sourceBranch); exists {
-				fmt.Printf("A worktree already exists for branch '%s' at:\n  %s\n\n", sourceBranch, existing.Path)
-				fmt.Println("Would you like to switch to it? (y/n)")
-				var response string
-				fmt.Scanln(&response)
-				if strings.ToLower(response) == "y" || strings.ToLower(response) == "yes" {
-					// Reuse open behavior for consistency
-					openWorktree(repoName, *existing)
-					return
+			// If a worktree already exists for this branch, automatically switch to it
+			if gitWorktreeExists, gitWorktreePath := git.GitWorktreeExistsForBranch(sourceBranch); gitWorktreeExists {
+				fmt.Printf("A worktree already exists for branch '%s' at:\n  %s\n", sourceBranch, gitWorktreePath)
+				fmt.Printf("Switching to existing worktree...\n")
+				// Convert to Worktree struct for openWorktree function
+				existing := &git.Worktree{
+					Name:   sourceBranch, // Use branch name for better session naming
+					Path:   gitWorktreePath,
+					Branch: sourceBranch,
 				}
-				fmt.Println("Cancelled")
-				os.Exit(0)
+				openWorktree(repoName, *existing)
+				return
 			}
 
 			fmt.Printf("Creating worktree '%s' for branch '%s'...\n", worktreeName, sourceBranch)
@@ -132,14 +131,38 @@ In both modes, opens the worktree in the configured editor and creates/switches 
 				}
 			}
 
-			// Create new branch
-			fmt.Printf("Creating branch '%s'...\n", worktreeName)
-			if err := git.CreateBranch(worktreeName); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			// Check if branch already exists
+			branchExists, err := git.BranchExists(worktreeName)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error checking branch existence: %v\n", err)
 				os.Exit(1)
 			}
 
-			// Create worktree for the new branch
+			if branchExists {
+				fmt.Printf("Branch '%s' already exists, using it...\n", worktreeName)
+				// Check if ANY worktree exists for this branch (not just ones managed by this tool)
+				if gitWorktreeExists, gitWorktreePath := git.GitWorktreeExistsForBranch(worktreeName); gitWorktreeExists {
+					fmt.Printf("A worktree already exists for branch '%s' at:\n  %s\n", worktreeName, gitWorktreePath)
+					fmt.Printf("Switching to existing worktree...\n")
+					// Convert to Worktree struct for openWorktree function
+					existing := &git.Worktree{
+						Name:   worktreeName, // Use branch name for better session naming
+						Path:   gitWorktreePath,
+						Branch: worktreeName,
+					}
+					openWorktree(repoName, *existing)
+					return
+				}
+			} else {
+				// Create new branch
+				fmt.Printf("Creating branch '%s'...\n", worktreeName)
+				if err := git.CreateBranch(worktreeName); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					os.Exit(1)
+				}
+			}
+
+			// Create worktree for the branch (existing or newly created)
 			fmt.Printf("Creating worktree for '%s'...\n", worktreeName)
 			p, err := git.CreateWorktree(repoName, worktreeName, worktreeName)
 			if err != nil {
