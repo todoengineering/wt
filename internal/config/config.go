@@ -8,14 +8,21 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+type TmuxWindow struct {
+	Name    string `toml:"name"`
+	Command string `toml:"command"`
+}
+
 type Config struct {
-	WorktreesLocation string   `toml:"worktrees_location"`
-	CopyFiles         []string `toml:"copy_files"`
+	WorktreesLocation string       `toml:"worktrees_location"`
+	CopyFiles         []string     `toml:"copy_files"`
+	TmuxWindows       []TmuxWindow `toml:"tmux_windows"`
 }
 
 var defaultConfig = Config{
 	WorktreesLocation: filepath.Join(os.Getenv("HOME"), "projects", "worktrees"),
 	CopyFiles:         []string{},
+	TmuxWindows:       []TmuxWindow{},
 }
 
 var currentConfig *Config
@@ -36,11 +43,12 @@ func Load() (*Config, error) {
 			config.WorktreesLocation = globalConfig.WorktreesLocation
 		}
 		config.CopyFiles = append(config.CopyFiles, globalConfig.CopyFiles...)
+		config.TmuxWindows = append(config.TmuxWindows, globalConfig.TmuxWindows...)
 	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("error loading global config: %w", err)
 	}
 
-	// Load local config  
+	// Load local config
 	var localConfig Config
 	localConfigPath := getLocalConfigPath()
 	if err := loadConfigFile(localConfigPath, &localConfig); err == nil {
@@ -50,6 +58,8 @@ func Load() (*Config, error) {
 		}
 		// Merge copy_files arrays (local adds to global)
 		config.CopyFiles = append(config.CopyFiles, localConfig.CopyFiles...)
+		// Merge tmux_windows arrays (local adds to global)
+		config.TmuxWindows = append(config.TmuxWindows, localConfig.TmuxWindows...)
 	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("error loading local config: %w", err)
 	}
@@ -132,6 +142,14 @@ func GetCopyFiles() []string {
 		return defaultConfig.CopyFiles
 	}
 	return config.CopyFiles
+}
+
+func GetTmuxWindows() []TmuxWindow {
+	config, err := Load()
+	if err != nil {
+		return defaultConfig.TmuxWindows
+	}
+	return config.TmuxWindows
 }
 
 func CreateGlobalConfigDir() error {
