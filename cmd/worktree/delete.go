@@ -1,11 +1,11 @@
 package worktree
 
 import (
-    "bytes"
-    "fmt"
-    "os"
-    "os/exec"
-    "strings"
+	"bytes"
+	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/todoengineering/wt/internal/git"
@@ -15,8 +15,8 @@ import (
 var forceDelete bool
 
 var deleteCmd = &cobra.Command{
-    Use:   "delete [worktree-name]",
-    Short: "Delete a worktree (interactive)",
+	Use:   "delete [worktree-name]",
+	Short: "Delete a worktree (interactive)",
 	Long: `Interactive selection of worktree to delete using fzf.
 Shows worktree name and associated branch,
 requires explicit confirmation,
@@ -85,26 +85,26 @@ prevents deletion of main repository worktree.`,
 			os.Exit(1)
 		}
 
-        if !forceDelete {
-            fmt.Printf("\n🗑️  Worktree Deletion Confirmation\n")
-            fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-            fmt.Printf("Worktree:    %s\n", selectedWorktree.Name)
-            fmt.Printf("Branch:      %s\n", selectedWorktree.Branch)
-            fmt.Printf("Path:        %s\n", selectedWorktree.Path)
-            fmt.Printf("\n⚠️  WARNING: This will permanently remove:\n")
-            fmt.Printf("   • The worktree directory and all its contents\n")
-            fmt.Printf("   • Any uncommitted changes in this worktree\n")
-            fmt.Printf("   • Associated tmux session (if exists)\n")
-            fmt.Printf("\nType 'yes' to confirm deletion: ")
+		if !forceDelete {
+			fmt.Printf("\n🗑️  Worktree Deletion Confirmation\n")
+			fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+			fmt.Printf("Worktree:    %s\n", selectedWorktree.Name)
+			fmt.Printf("Branch:      %s\n", selectedWorktree.Branch)
+			fmt.Printf("Path:        %s\n", selectedWorktree.Path)
+			fmt.Printf("\n⚠️  WARNING: This will permanently remove:\n")
+			fmt.Printf("   • The worktree directory and all its contents\n")
+			fmt.Printf("   • Any uncommitted changes in this worktree\n")
+			fmt.Printf("   • Associated tmux session (if exists)\n")
+			fmt.Printf("\nType 'yes' to confirm deletion: ")
 
-            var confirmation string
-            fmt.Scanln(&confirmation)
+			var confirmation string
+			fmt.Scanln(&confirmation)
 
-            if strings.ToLower(confirmation) != "yes" {
-                fmt.Println("✅ Deletion cancelled")
-                return
-            }
-        }
+			if strings.ToLower(confirmation) != "yes" {
+				fmt.Println("✅ Deletion cancelled")
+				return
+			}
+		}
 
 		// Check for and kill associated tmux session
 		// Standard session name is <repo>-<worktree>. For backward compatibility,
@@ -143,7 +143,7 @@ prevents deletion of main repository worktree.`,
 }
 
 func init() {
-    deleteCmd.Flags().BoolVar(&forceDelete, "force", false, "skip confirmation and delete the worktree")
+	deleteCmd.Flags().BoolVar(&forceDelete, "force", false, "skip confirmation and delete the worktree")
 }
 
 func selectWorktreeForDeletion(worktrees []git.Worktree) (git.Worktree, error) {
