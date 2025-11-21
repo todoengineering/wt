@@ -1,15 +1,14 @@
 package worktree
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/todoengineering/wt/internal/git"
 	"github.com/todoengineering/wt/internal/tmux"
+	"github.com/todoengineering/wt/internal/ui"
 )
 
 var forceDelete bool
@@ -147,70 +146,20 @@ func init() {
 }
 
 func selectWorktreeForDeletion(worktrees []git.Worktree) (git.Worktree, error) {
-	// Check if fzf is available
-	if _, err := exec.LookPath("fzf"); err == nil {
-		return selectWorktreeWithFzfForDeletion(worktrees)
-	}
-
-	// Fallback to simple selection
-	fmt.Println("Select a worktree to delete:")
-	for i, wt := range worktrees {
-		fmt.Printf("%d) %-30s [%s] %s\n", i+1, wt.Name, wt.Branch, wt.Path)
-	}
-
-	var choice int
-	fmt.Print("Enter choice (number): ")
-	_, err := fmt.Scanf("%d", &choice)
-	if err != nil {
-		return git.Worktree{}, fmt.Errorf("invalid input: %w", err)
-	}
-
-	if choice < 1 || choice > len(worktrees) {
-		return git.Worktree{}, fmt.Errorf("invalid choice: %d", choice)
-	}
-
-	return worktrees[choice-1], nil
-}
-
-func selectWorktreeWithFzfForDeletion(worktrees []git.Worktree) (git.Worktree, error) {
-	// Prepare input for fzf
-	var input bytes.Buffer
+	var items []ui.Item
 	for _, wt := range worktrees {
-		line := fmt.Sprintf("%-30s %-20s %s", wt.Name, fmt.Sprintf("[%s]", wt.Branch), wt.Path)
-		input.WriteString(line + "\n")
+		items = append(items, ui.Item{
+			TitleStr:       wt.Name,
+			DescriptionStr: fmt.Sprintf("[%s] %s", wt.Branch, wt.Path),
+			FilterStr:      wt.Name,
+			Value:          wt,
+		})
 	}
 
-	// Create fzf command
-	cmd := exec.Command("fzf",
-		"--prompt=🗑️  Select worktree to delete: ",
-		"--height=50%",
-		"--layout=reverse",
-		"--header=⚠️  WARNING: Selected worktree will be permanently deleted\n📁 Format: NAME [BRANCH] PATH")
-	cmd.Stdin = &input
-	cmd.Stderr = os.Stderr
-
-	// Run fzf and capture output
-	output, err := cmd.Output()
+	selected, err := ui.Select(items, "Select a worktree to delete")
 	if err != nil {
-		return git.Worktree{}, fmt.Errorf("selection cancelled")
+		return git.Worktree{}, err
 	}
 
-	// Parse the selected line to get worktree name
-	selected := strings.TrimSpace(string(output))
-	if selected == "" {
-		return git.Worktree{}, fmt.Errorf("no selection made")
-	}
-
-	// Extract worktree name (first field)
-	parts := strings.Fields(selected)
-	if len(parts) > 0 {
-		worktreeName := parts[0]
-		for _, wt := range worktrees {
-			if wt.Name == worktreeName {
-				return wt, nil
-			}
-		}
-	}
-
-	return git.Worktree{}, fmt.Errorf("could not find selected worktree")
+	return selected.Value.(git.Worktree), nil
 }

@@ -2,10 +2,8 @@ package worktree
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"sort"
 	"strings"
 
@@ -14,6 +12,7 @@ import (
 	"github.com/todoengineering/wt/internal/editor"
 	"github.com/todoengineering/wt/internal/git"
 	"github.com/todoengineering/wt/internal/tmux"
+	"github.com/todoengineering/wt/internal/ui"
 )
 
 var newFromBranch string
@@ -234,42 +233,8 @@ func init() {
 	newCmd.Flags().StringVar(&newFromBranch, "from", "", "create a worktree from an existing branch (optionally provide <name> for worktree)")
 }
 
-// Branch selection helpers (ported from former checkout flow)
+// Branch selection helpers
 func selectBranchInteractive(branches []git.Branch) (string, error) {
-	// Check if fzf is available
-	if _, err := exec.LookPath("fzf"); err == nil {
-		return selectBranchWithFzf(branches)
-	}
-
-	// Fallback to simple selection
-	fmt.Println("Select a branch:")
-	for i, branch := range branches {
-		status := ""
-		if branch.IsLocal && branch.IsRemote {
-			status = " [local+remote]"
-		} else if branch.IsLocal {
-			status = " [local]"
-		} else {
-			status = " [remote]"
-		}
-		fmt.Printf("%d) %s%s\n", i+1, branch.Name, status)
-	}
-
-	var choice int
-	fmt.Print("Enter choice (number): ")
-	_, err := fmt.Scanf("%d", &choice)
-	if err != nil {
-		return "", fmt.Errorf("invalid input: %w", err)
-	}
-
-	if choice < 1 || choice > len(branches) {
-		return "", fmt.Errorf("invalid choice: %d", choice)
-	}
-
-	return branches[choice-1].Name, nil
-}
-
-func selectBranchWithFzf(branches []git.Branch) (string, error) {
 	// Sort branches: local first, then by name
 	sort.Slice(branches, func(i, j int) bool {
 		if branches[i].IsLocal != branches[j].IsLocal {
@@ -278,8 +243,7 @@ func selectBranchWithFzf(branches []git.Branch) (string, error) {
 		return branches[i].Name < branches[j].Name
 	})
 
-	// Prepare input for fzf
-	var input bytes.Buffer
+	var items []ui.Item
 	for _, branch := range branches {
 		status := ""
 		if branch.IsLocal && branch.IsRemote {
@@ -289,36 +253,19 @@ func selectBranchWithFzf(branches []git.Branch) (string, error) {
 		} else {
 			status = "[remote]"
 		}
-		line := fmt.Sprintf("%-40s %s", branch.Name, status)
-		input.WriteString(line + "\n")
+
+		items = append(items, ui.Item{
+			TitleStr:       branch.Name,
+			DescriptionStr: status,
+			FilterStr:      branch.Name,
+			Value:          branch.Name,
+		})
 	}
 
-	// Create fzf command
-	cmd := exec.Command("fzf",
-		"--prompt=Select branch: ",
-		"--height=40%",
-		"--layout=reverse",
-		"--header=Select a branch to create a worktree from")
-	cmd.Stdin = &input
-	cmd.Stderr = os.Stderr
-
-	// Run fzf and capture output
-	output, err := cmd.Output()
+	selected, err := ui.Select(items, "Select a branch to create a worktree from")
 	if err != nil {
-		return "", fmt.Errorf("selection cancelled")
+		return "", err
 	}
 
-	// Parse the selected line to get branch name
-	selected := strings.TrimSpace(string(output))
-	if selected == "" {
-		return "", fmt.Errorf("no selection made")
-	}
-
-	// Extract branch name (first field)
-	parts := strings.Fields(selected)
-	if len(parts) > 0 {
-		return parts[0], nil
-	}
-
-	return "", fmt.Errorf("could not parse selection")
+	return selected.Value.(string), nil
 }

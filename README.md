@@ -37,6 +37,11 @@ go install .
 **Default:** `[]` (empty)
 **Description:** List of files/patterns to copy from main repository to new worktrees. Supports glob patterns.
 
+#### `tmux_windows`
+**Type:** Array of tables (`{ name = "<window-name>", command = "<optional shell command>" }`)
+**Default:** `[]` (empty)
+**Description:** Defines the tmux windows to create when a new session is started. Leave `command` empty to open a plain shell. Commands run in the worktree directory, so you can start servers, test runners, or editors automatically.
+
 ### Environment Variables
 
 #### `WORKTREE_BASE_DIR`
@@ -102,6 +107,14 @@ copy_files = [
     "config/development.json",
     "scripts/setup.sh"
 ]
+
+# Predefine tmux windows for this project
+tmux_windows = [
+    { name = "editor", command = "nvim ." },
+    { name = "server", command = "pnpm dev" },
+    { name = "tests", command = "pnpm test --watch" },
+    { name = "terminal", command = "" }
+]
 ```
 
 #### File Copy Patterns
@@ -138,6 +151,7 @@ copy_files = [
 ### Configuration Merging
 
 - **Global + Local:** `copy_files` arrays are merged (local appends to global)
+- **Global + Local:** `tmux_windows` arrays are merged (global windows first, then local additions; duplicates are preserved)
 - **Overrides:** `worktrees_location` in local config overrides global
 - **Deduplication:** Duplicate entries in `copy_files` are automatically removed
 
@@ -161,6 +175,9 @@ Lists all worktrees for the current repository, showing name, branch, and path.
 ```bash
 # Create worktree for new branch
 wt new <branch-name>
+
+# Create from existing branch
+wt new --from <branch-name>
 
 # Interactive mode (prompts for branch name)
 wt new
@@ -271,6 +288,13 @@ go run . <command>
 ```bash
 go test ./...
 ```
+
+### GitHub PR Workflow
+1. Create a feature branch from `main` (`git checkout -b feature/my-change`).
+2. Run `go fmt ./...` or `gofmt -w .` to keep formatting consistent.
+3. Execute `go test ./...` and any relevant integration checks before pushing.
+4. `git status --short` to verify only intentional changes are staged, then commit with a concise message.
+5. Push the branch, open a PR against `main`, and include context, test results, and any follow-up notes.
 
 ## Requirements
 

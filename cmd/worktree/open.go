@@ -1,16 +1,14 @@
 package worktree
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/todoengineering/wt/internal/editor"
 	"github.com/todoengineering/wt/internal/git"
 	"github.com/todoengineering/wt/internal/tmux"
+	"github.com/todoengineering/wt/internal/ui"
 )
 
 var (
@@ -26,13 +24,6 @@ var openCmd = &cobra.Command{
 2. Select specific worktree within that project
 Opens selected worktree in configured editor and creates/switches to tmux session.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Check if fzf is available
-		if _, err := exec.LookPath("fzf"); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: fzf is required for the open command\n")
-			fmt.Fprintf(os.Stderr, "Please install fzf: https://github.com/junegunn/fzf\n")
-			os.Exit(1)
-		}
-
 		// Determine project scope
 		projects, err := git.ListAllProjects()
 		if err != nil {
@@ -107,96 +98,50 @@ Opens selected worktree in configured editor and creates/switches to tmux sessio
 }
 
 func selectProjectInteractive(projects []git.Project) (git.Project, error) {
-	// Prepare input for fzf
-	var input bytes.Buffer
+	var items []ui.Item
 	for _, project := range projects {
 		worktreeCount := len(project.Worktrees)
-		line := fmt.Sprintf("%-30s (%d worktree%s)", project.Name, worktreeCount,
+		desc := fmt.Sprintf("%d worktree%s", worktreeCount,
 			func() string {
 				if worktreeCount != 1 {
 					return "s"
 				}
 				return ""
 			}())
-		input.WriteString(line + "\n")
+
+		items = append(items, ui.Item{
+			TitleStr:       project.Name,
+			DescriptionStr: desc,
+			FilterStr:      project.Name,
+			Value:          project,
+		})
 	}
 
-	// Create fzf command for project selection
-	cmd := exec.Command("fzf",
-		"--prompt=Select project: ",
-		"--height=40%",
-		"--layout=reverse",
-		"--header=Select a project to browse worktrees")
-	cmd.Stdin = &input
-	cmd.Stderr = os.Stderr
-
-	// Run fzf and capture output
-	output, err := cmd.Output()
+	selected, err := ui.Select(items, "Select a project to browse worktrees")
 	if err != nil {
-		return git.Project{}, fmt.Errorf("selection cancelled")
+		return git.Project{}, err
 	}
 
-	// Parse the selected line to get project name
-	selected := strings.TrimSpace(string(output))
-	if selected == "" {
-		return git.Project{}, fmt.Errorf("no selection made")
-	}
-
-	// Extract project name (first field)
-	parts := strings.Fields(selected)
-	if len(parts) > 0 {
-		projectName := parts[0]
-		for _, project := range projects {
-			if project.Name == projectName {
-				return project, nil
-			}
-		}
-	}
-
-	return git.Project{}, fmt.Errorf("could not find selected project")
+	return selected.Value.(git.Project), nil
 }
 
 func selectWorktreeFromProject(project git.Project) (git.Worktree, error) {
-	// Prepare input for fzf
-	var input bytes.Buffer
+	var items []ui.Item
 	for _, worktree := range project.Worktrees {
-		line := fmt.Sprintf("%-30s %s", worktree.Name, worktree.Path)
-		input.WriteString(line + "\n")
+		items = append(items, ui.Item{
+			TitleStr:       worktree.Name,
+			DescriptionStr: worktree.Path,
+			FilterStr:      worktree.Name,
+			Value:          worktree,
+		})
 	}
 
-	// Create fzf command for worktree selection
-	cmd := exec.Command("fzf",
-		"--prompt=Select worktree: ",
-		"--height=40%",
-		"--layout=reverse",
-		fmt.Sprintf("--header=Select a worktree from %s", project.Name))
-	cmd.Stdin = &input
-	cmd.Stderr = os.Stderr
-
-	// Run fzf and capture output
-	output, err := cmd.Output()
+	selected, err := ui.Select(items, fmt.Sprintf("Select a worktree from %s", project.Name))
 	if err != nil {
-		return git.Worktree{}, fmt.Errorf("selection cancelled")
+		return git.Worktree{}, err
 	}
 
-	// Parse the selected line to get worktree name
-	selected := strings.TrimSpace(string(output))
-	if selected == "" {
-		return git.Worktree{}, fmt.Errorf("no selection made")
-	}
-
-	// Extract worktree name (first field)
-	parts := strings.Fields(selected)
-	if len(parts) > 0 {
-		worktreeName := parts[0]
-		for _, worktree := range project.Worktrees {
-			if worktree.Name == worktreeName {
-				return worktree, nil
-			}
-		}
-	}
-
-	return git.Worktree{}, fmt.Errorf("could not find selected worktree")
+	return selected.Value.(git.Worktree), nil
 }
 
 func openWorktree(projectName string, worktree git.Worktree) {
