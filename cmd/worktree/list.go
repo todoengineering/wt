@@ -12,13 +12,13 @@ import (
 
 var (
 	// Styles for list output
-	repoStyle     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("212"))
-	branchStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
-	pathStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
-	arrowStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-	warningStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("214"))
-	missingStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Italic(true)
-	noItemsStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Italic(true)
+	repoStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("212"))
+	branchStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("86"))
+	pathStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+	arrowStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	warningStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("214"))
+	missingStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("203")).Italic(true)
+	noItemsStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Italic(true)
 )
 
 var (
