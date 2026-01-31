@@ -3,7 +3,9 @@ package config
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -107,7 +109,15 @@ func getGlobalConfigPath() string {
 }
 
 func getLocalConfigPath() string {
-	return ".wt.toml"
+	// Find the git repository root
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err := cmd.Output()
+	if err != nil {
+		// Not in a git repo, fall back to current directory
+		return ".wt.toml"
+	}
+	repoRoot := strings.TrimSpace(string(output))
+	return filepath.Join(repoRoot, ".wt.toml")
 }
 
 func expandPath(path string) string {
