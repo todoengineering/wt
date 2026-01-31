@@ -262,9 +262,19 @@ func copyConfiguredFiles(worktreePath string) error {
 	}
 	mainRepoPath := strings.TrimSpace(string(output))
 
+	if config.IsVerbose() {
+		fmt.Printf("[copy] Main repo path: %s\n", mainRepoPath)
+	}
+
 	// Get files to copy from config
 	filesToCopy := config.GetCopyFiles()
+	if config.IsVerbose() {
+		fmt.Printf("[copy] Files to copy: %v\n", filesToCopy)
+	}
 	if len(filesToCopy) == 0 {
+		if config.IsVerbose() {
+			fmt.Println("[copy] No files configured to copy")
+		}
 		return nil
 	}
 
